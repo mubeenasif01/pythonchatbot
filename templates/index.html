@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        #chat-container {
+            display: flex;
+            flex-direction: column;
+            width: 90%;
+            max-width: 450px;
+            height: 85vh;
+            border-radius: 12px;
+            background-color: #ffffff; /* Chat container background */
+            background-image: url('https://www.transparenttextures.com/patterns/diamond-upholstery.png'); /* Optional texture */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        #header {
+            background-color: #6200ea; /* Vibrant purple header */
+            color: white;
+            text-align: center;
+            padding: 15px 0;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        #welcome-message {
+            background-color: #e8eaf6; /* Light purple welcome message */
+            color: #333;
+            padding: 15px;
+            text-align: center;
+            font-size: 18px;
+            border-bottom: 1px solid #ddd;
+        }
+        #chat {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            background-color: #f3f4f6; /* Light grey chat background */
+            scrollbar-width: thin;
+        }
+        #chat div {
+            margin-bottom: 15px;
+            line-height: 1.6;
+            padding: 10px 15px;
+            border-radius: 12px;
+            max-width: 80%;
+            font-size: 16px;
+        }
+        #chat div b {
+            color: #6200ea; /* Purple color for "You:" */
+        }
+        #chat div:nth-child(odd) {
+            align-self: flex-start;
+            background-color: #eceff1; /* Light grey for user messages */
+            color: #000;
+        }
+        #chat div:nth-child(even) {
+            align-self: flex-end;
+            background-color: #6200ea; /* Matching header color for bot background */
+            color: #fff; /* Default white text color */
+        }
+        #chat div:nth-child(even) b {
+            color: #ffeb3b; /* Yellow color for "Bot:" text */
+        }
+        #user_input {
+            width: calc(100% - 70px);
+            padding: 15px;
+            border: none;
+            border-radius: 0 0 0 12px;
+            font-size: 16px;
+            border-top: 1px solid #ddd;
+        }
+        #send_button {
+            width: 70px;
+            border: none;
+            background-color: #6200ea; /* Matching header color */
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 0 0 12px 0;
+            border-top: 1px solid #6200ea;
+        }
+        #send_button:hover {
+            background-color: #3700b3; /* Darker shade on hover */
+        }
+        #input_container {
+            display: flex;
+        }
+        .loading {
+            font-size: 14px;
+            color: #777;
+            margin-top: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="chat-container">
+        <div id="header">Chatbot Assistant</div>
+        <div id="welcome-message">Welcome! How can I assist you today?</div>
+        <div id="chat"></div>
+        <div id="input_container">
+            <input type="text" id="user_input" placeholder="Type your message here">
+            <button id="send_button" onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        async function sendMessage() {
+            const chatBox = document.getElementById('chat');
+            const message = document.getElementById('user_input').value;
+
+            if (message.trim() === '') return;
+
+            // Display user's message
+            chatBox.innerHTML += `<div><b>You:</b> ${message}</div>`;
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            // Clear input field and show loading indicator
+            document.getElementById('user_input').value = '';
+            chatBox.innerHTML += `<div id="loading" class="loading">Bot is typing...</div>`;
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            try {
+                const response = await fetch('/get_answer', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({message: message})
+                });
+                const data = await response.json();
+
+                // Remove loading indicator and display bot's response
+                document.getElementById('loading').remove();
+                chatBox.innerHTML += `<div><b>Bot:</b> ${data.answer}</div>`;
+                chatBox.scrollTop = chatBox.scrollHeight;
+            } catch (error) {
+                document.getElementById('loading').remove();
+                chatBox.innerHTML += `<div><b>Bot:</b> Sorry, something went wrong.</div>`;
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
+        }
+
+        // Ensure the Enter key sends the message
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('user_input').addEventListener('keydown', function(event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault(); // Prevent default form submission behavior
+                    sendMessage();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
