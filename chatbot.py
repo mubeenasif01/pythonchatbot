@@ -60,6 +60,9 @@ def setup_chatbot(csv_file_path):
     vectorizer = TfidfVectorizer()
     X = vectorizer.fit_transform(data['processed_question'])
 
+    # Define a similarity threshold
+    SIMILARITY_THRESHOLD = 0.1
+
     # Function to get the answer based on the user's query
     def get_answer(query):
         # Preprocess the user query
@@ -70,10 +73,17 @@ def setup_chatbot(csv_file_path):
         similarity = cosine_similarity(query_vec, X)
         # Find the index of the most similar question
         idx = similarity.argmax()
-        # Return the corresponding answer
-        return data.iloc[idx]['answer']
+        max_similarity = similarity[0, idx]
+
+        if max_similarity >= SIMILARITY_THRESHOLD:
+            # Return the corresponding answer if similarity is above the threshold
+            return data.iloc[idx]['answer']
+        else:
+            # Return a default response if no sufficiently similar question is found
+            return "I'm sorry, I couldn't find an answer to your question. Could you please rephrase it?"
 
     return get_answer
+
 
 # Step 3: Flask app setup
 app = Flask(__name__)
